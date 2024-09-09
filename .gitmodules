@@ -6,4 +6,4 @@
 	url = https://github.com/g-truc/gli
 [submodule "external/optick"]
 	path = external/optick
-	url = https://github.com/bombomby/optick
+	url = https://github.com/bombomby/optick.git
