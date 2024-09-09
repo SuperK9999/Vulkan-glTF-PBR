@@ -6,6 +6,7 @@
 * This code is licensed under the MIT license (MIT) (http://opensource.org/licenses/MIT)
 */
 
+#include "optick.h"
 #include "VulkanExampleBase.h"
 
 std::vector<const char*> VulkanExampleBase::args;
@@ -301,6 +302,8 @@ void VulkanExampleBase::fileDropped(std::string filename) { }
 
 void VulkanExampleBase::renderFrame()
 {
+	OPTICK_EVENT();
+
 	auto tStart = std::chrono::high_resolution_clock::now();
 
 	render();
@@ -324,8 +327,12 @@ void VulkanExampleBase::renderLoop()
 #if defined(_WIN32)
 	MSG msg;
 	bool quitMessageReceived = false;
-	while (!quitMessageReceived) {
-		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+	while (!quitMessageReceived) 
+	{
+		OPTICK_FRAME("MainThread");
+
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) 
+		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 			if (msg.message == WM_QUIT) {
@@ -333,7 +340,7 @@ void VulkanExampleBase::renderLoop()
 				break;
 			}
 		}
-		if (!IsIconic(window)) {
+		if (!IsIconic(window)) {			
 			renderFrame();
 		}
 	}
@@ -1977,6 +1984,8 @@ void VulkanExampleBase::setupFrameBuffer()
 
 void VulkanExampleBase::windowResize()
 {
+	OPTICK_EVENT();
+
 	if (!prepared) {
 		return;
 	}

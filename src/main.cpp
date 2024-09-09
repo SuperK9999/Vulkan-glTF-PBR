@@ -31,6 +31,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "optick.h"
+
 /*
 	PBR example main class
 */
@@ -271,6 +273,8 @@ public:
 
 	void recordCommandBuffer()
 	{
+		OPTICK_EVENT();
+
 		vkResetCommandBuffer(commandBuffers[currentFrame], 0);
 
 		VkCommandBufferBeginInfo cmdBufferBeginInfo{};
@@ -1751,6 +1755,8 @@ public:
 
 	void updateUniformBuffers()
 	{
+		OPTICK_EVENT();
+
 		// Scene
 		shaderValuesScene.projection = camera.matrices.perspective;
 		shaderValuesScene.view = camera.matrices.view;
@@ -1778,6 +1784,8 @@ public:
 
 	void updateParams()
 	{
+		OPTICK_EVENT();
+
 		shaderValuesParams.lightDir = glm::vec4(
 			sin(glm::radians(lightSource.rotation.x)) * cos(glm::radians(lightSource.rotation.y)),
 			sin(glm::radians(lightSource.rotation.y)),
@@ -1851,6 +1859,8 @@ public:
 	*/
 	void updateOverlay()
 	{
+		OPTICK_EVENT();
+
 		ImGuiIO& io = ImGui::GetIO();
 
 		ImVec2 lastDisplaySize = io.DisplaySize;

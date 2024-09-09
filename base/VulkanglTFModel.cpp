@@ -16,6 +16,7 @@
 #define STBI_MSC_SECURE_CRT
 
 #include "VulkanglTFModel.h"
+#include "optick.h"
 
 namespace vkglTF
 {
@@ -1579,6 +1580,8 @@ namespace vkglTF
 
 	void Model::updateAnimation(uint32_t index, float time)
 	{
+		OPTICK_EVENT();
+
 		if (animations.empty()) {
 			std::cout << ".glTF does not contain animation." << std::endl;
 			return;
