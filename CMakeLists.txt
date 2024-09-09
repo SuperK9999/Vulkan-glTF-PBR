@@ -13,8 +13,79 @@ include_directories(external/imgui)
 include_directories(external/tinygltf)
 include_directories(external/basisu/transcoder)
 include_directories(external/basisu/zstd)
+include_directories(external/optick/src)
 include_directories(base)
 
+# -------------------------------------------------------------------------------------------
+# Optick Core
+# -------------------------------------------------------------------------------------------
+file(GLOB OPTICK_SRC "external/optick/src/*.*")
+source_group("OptickCore" FILES ${OPTICK_SRC})
+
+# OptickCore
+add_library(OptickCore SHARED ${OPTICK_SRC})
+target_include_directories(OptickCore
+	PUBLIC
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
+)
+set_target_properties(OptickCore 
+	PROPERTIES 
+		PUBLIC_HEADER "${CMAKE_CURRENT_LIST_DIR}/src/optick.h;${CMAKE_CURRENT_LIST_DIR}/src/optick.config.h"
+		DEBUG_POSTFIX d # So that we can install debug and release side by side
+)
+target_compile_definitions(OptickCore PRIVATE OPTICK_EXPORTS=1)
+if(OPTICK_USE_VULKAN)
+	message(STATUS "Optick uses Vulkan")
+	find_package(Vulkan REQUIRED)
+	target_link_libraries(OptickCore PRIVATE Vulkan::Vulkan)
+else()
+	target_compile_definitions(OptickCore PRIVATE OPTICK_ENABLE_GPU_VULKAN=0)
+endif()
+if(OPTICK_USE_D3D12)
+	message(STATUS "Optick uses DirectX 12")
+	target_link_libraries(OptickCore PRIVATE "d3d12.lib" "dxgi.lib")
+else()
+	target_compile_definitions(OptickCore PRIVATE OPTICK_ENABLE_GPU_D3D12=0)
+endif()
+if(OPTICK_USE_D3D12 OR OPTICK_USE_VULKAN)
+	target_compile_definitions(OptickCore PRIVATE OPTICK_ENABLE_GPU=1)
+else()
+	target_compile_definitions(OptickCore PRIVATE OPTICK_ENABLE_GPU=0)
+endif()
+
+if(MSVC)
+	# temporary solution to unblock C++17 users
+	target_compile_definitions(OptickCore PRIVATE _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS)
+endif()
+
+set(EXTRA_LIBS ${EXTRA_LIBS} OptickCore)
+if(NOT MSVC)
+	set(EXTRA_LIBS ${EXTRA_LIBS} pthread)
+endif()
+
+
+# Gui App
+if(MSVC AND OPTICK_BUILD_GUI_APP)
+	add_subdirectory(gui)
+endif()
+
+
+# Console App
+if(OPTICK_BUILD_CONSOLE_SAMPLE)
+	file(GLOB TEST_ENGINE_SRC "samples/Common/TestEngine/*.*")
+	source_group("TestEngine" FILES ${TEST_ENGINE_SRC})
+	add_executable(ConsoleApp "samples/ConsoleApp/main.cpp" ${TEST_ENGINE_SRC})
+	target_include_directories(ConsoleApp PRIVATE "samples/Common/TestEngine")
+	target_link_libraries(ConsoleApp ${EXTRA_LIBS})
+	set_target_properties(ConsoleApp PROPERTIES FOLDER Samples)
+endif()
+
+
+# -------------------------------------------------------------------------------------------
+# Vulkan glTF-PBR
+# -------------------------------------------------------------------------------------------
+
+OPTION(USE_D2D_WSI "Build the project using Direct to Display swapchain" OFF)
 OPTION(USE_D2D_WSI "Build the project using Direct to Display swapchain" OFF)
 OPTION(USE_WAYLAND_WSI "Build the project using Wayland swapchain" OFF)
 
@@ -129,7 +200,7 @@ ELSE(WIN32)
 	link_libraries(${XCB_LIBRARIES} ${Vulkan_LIBRARY} ${Vulkan_LIBRARY} ${WAYLAND_CLIENT_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 ENDIF(WIN32)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 
 add_subdirectory(base)
 add_subdirectory(src)
